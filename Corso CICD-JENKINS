@@ -1,0 +1,123 @@
+Lista istruzioni per creazione cluster k8s con CI/CD
+
+Creazione Account   : https://hub.docker.com/ (facoltativo)
+Creazione Account   : https://github.com/
+Generazione Token   : https://github.com/settings/tokens
+Download Lens       : https://k8slens.dev/
+Download Ngrok      : https://ngrok.com/download
+
+1.  Setting macchine virtuali
+    Repo in gioco: 
+	    https://github.com/GioeleLaugelli/Infra.git
+	    https://github.com/GioeleLaugelli/Infra-Config.git
+
+    1)  Download di git in una folder ed entro in 1master2worker
+        1.1)  vagrant up                                                                                                                    --> crea macchine virtuali e le configura
+    
+    2)  vagrant ssh kmaster                                                                                                                 --> mi connetto alla vm
+        2.1)  vagrant@kmaster$ sudo yum install wget -y                                                                                     --> installo wget
+        2.2)  vagrant@kmaster$ wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/master.sh                            --> recupero master.sh
+        2.3)  vagrant@kmaster$ chmod +x master.sh                                                                                           --> permessi esecuzione master.sh
+        2.4)  vagrant@kmaster$ ./master.sh | grep task                                                                                      --> eseguo script (grep per stampa ordinata delle varie fasi)
+        2.5)  vagrant@kmaster$ kubeadm token create --print-join-command                                                                    --> stampa comando di join
+    
+    3) vagrant ssh kworker1                                                                                                                 --> mi connetto alla vm
+        3.1)  vagrant@kworker1$ sudo yum install wget -y                                                                                    --> installo wget
+        3.2)  vagrant@kworker1$ wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/worker.sh                           --> recupero worker.sh
+        3.3)  vagrant@kworker1$ chmod +x worker.sh                                                                                          --> permessi esecuzione worker.sh
+        3.4)  vagrant@kworker1$ ./worker.sh | grep task                                                                                     --> eseguo script (grep per stampa ordinata delle varie fasi)
+        3.5)  vagrant@kworker1$ sudo kubeadm join <INDIRIZZO_MASTER> --token <TOKEN> --discovery-token-ca-cert-hash sha256:<HEX_CODE>       --> comando che aggiunge il nodo alla rete
+    
+    4) vagrant ssh kworker2                                                                                                                 --> mi connetto alla vm
+        4.1)  vagrant@kworker2$ sudo yum install wget -y                                                                                    --> installo wget
+        4.2)  vagrant@kworker2$ wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/worker.sh                           --> recupero worker.sh
+        4.3)  vagrant@kworker2$ chmod +x worker.sh                                                                                          --> permessi esecuzione worker.sh
+        4.4)  vagrant@kworker2$ ./worker.sh | grep task                                                                                     --> eseguo script (grep per stampa ordinata delle varie fasi)
+        4.5)  vagrant@kworker2$ sudo kubeadm join <INDIRIZZO_MASTER> --token <TOKEN> --discovery-token-ca-cert-hash sha256:<HEX_CODE>       --> comando che aggiunge il nodo alla rete
+    
+    5) << sotto nodo master >>
+        5.1) vagrant@master$ kubectl apply -f https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/kube-flannel.yml           --> installa flannel (necessario per networking)
+
+2) Setting Lens
+    Per aggiungere un cluster kubernetes su lens è sufficiente premere 'aggiungi un cluster' con l'opzione 'paste as a text'
+    nella text area che ci viene mostrata incolliamo il risultato di questo comando eseguito sul nodo master:
+        cat ~/.kube/config 
+
+3) Installazione ArgoCD
+    Repo in gioco:
+        https://github.com/GioeleLaugelli/test-application.git
+            1) << sotto nodo master >>
+                1.1) vagrant@kmaster$ kubectl create namespace argocd                                                                                       --> crea namespace ArgoCD
+                1.2) vagrant@kmaster$ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml           --> installa componenti ArgoCD
+                1.3) vagrant@kmaster$ kubectl apply -n argocd -f https://raw.githubusercontent.com/GioeleLaugelli/Application/main/application.yaml         --> installa application ArgoCD
+
+4) Installazione Jenkins
+        https://github.com/GioeleLaugelli/Jenkins-K8.git
+            1) << sotto nodo master >>
+                1.1) vagrant@kmaster$ sudo yum install -y git                                                                                               --> installo git
+                1.2) vagrant@kmaster$ git clone https://github.com/GioeleLaugelli/Jenkins-K8.git                                                            --> clono repo
+                1.3) vagrant@kmaster$ cd jenkins-on-kube                                                                                                    --> entro nella cartella
+                1.4) vagrant@kmaster$ chmod +x exec.sh                                                                                                      --> permessi esecuzione a file
+                1.5) vagrant@kmaster$ ./exec.sh                                                                                                             --> crea componenti per jenkins
+
+5) Setting Jenkins
+    Repo in gioco:
+        https://github.com/GioeleLaugelli/Application-Code.git
+    Jenkins raggiungibile a 172.16.16.100:32000
+                            172.16.16.101:32000
+                            172.16.16.102:32000
+    Questo perchè il servizio creato specifica NodePort come type
+
+    1) Al primo accesso Jenkins richiede la password iniziale è possibile trovarla nel file /var/lib/jenkins/secrets/initialAdminPassword contenuto nella pod
+        Per leggere il contenuto del file eseguire sul nodo master:
+            kubectl get pods -n jenkins 															        --> prendo il nome del pod
+            cat /home/vagrant/jenkins-on-kube/namespace.yaml												--> prendo il nome dello space
+            kubectl exec <JENKINS_POD_NAME> -n <JENKINS_NAMESPACE> -it -- sh
+                cat /var/lib/jenkins/secrets/initialAdminPassword
+    2) Installare i componenti aggiuntivi consigliati
+    3) Creare account
+    4) Setup Pipeline
+        4.1) Creazione credenziali:
+            ID          - USER              - TOKEN    
+            dockerhub   - GioeleLaugelli    - dckr_pat_AM1XOPRJh-whLCL1GQVCYmes1LA
+            github	    - dockerhublab      - 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
+        4.2) Creazione della Pipeline
+            Cliccare su New Item, inserire un nome e selezionare la tipologia pipeline dall'elenco
+            Attivare Tick "GitHub project"
+                Parametro: https://github.com/GioeleLaugelli/Application.git
+            Attivare Tick "GitHub hook trigger for GITScm polling"
+            Definition
+                "Pipeline script from SCM"
+            Repo da inserire come codice: 
+                https://github.com/GioeleLaugelli/Application-Code.git
+            Credentials
+                Selezionare le credentials di GitHub dall'elenco
+            Branch:
+                */main
+            Script Path:
+                Jenkinsfile.linux
+
+5) Accedere ArgoCD
+    Per accedere all'interfaccia grafica di ArgoCD è necessario rendere raggiungibile il servizio argocd-server
+    Se si sta utilizzando Lens:
+        Andare nella tab Network-Services
+            Cercare nell'elenco argocd-server e selezionarlo
+                Cercare ports e cliccare su forward a fianco di "443:8080/TCP"
+                In automatico Lens farà un port forwarding permettendoci di visualizzare la pagina su una porta libera del localhost.
+    #In alternativa è possibile patchare il servizio argocd-server e renderlo di tipo NodePort in modo da renderlo raggiungibile dall'esterno del cluster
+    #    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
+
+    L'accesso si effettua usando
+        username: admin
+        password: andare nella tab Config-Secrets argocd-initial-admin-secret locato nel namespace argocd, la password è codificata in base64(cliccare sull'occhio per ottenere la password adatta al login) 
+
+6) Abilitare jenkins su esterno 
+    Scaricare ngrok (https://ngrok.com/download) ed estrarlo.
+    Andare sul repo di GitLab repo di https://github.com/GioeleLaugelli/Application-Code.git nella sezione Settings-Webhooks
+    Aprire l'eseguibile scaricato prima ed eseguire il seguente comando: ngrok http 172.16.16.100:32000
+    Inserire il risultato (Es:https://1cec-109-116-144-203.eu.ngrok.io) all'interno del webhook aggiungendo "/github-webhook/" alla fine (Es:https://1cec-109-116-144-203.eu.ngrok.io/github-webhook/)
+    
+7) Osservazioni:
+    Se si dovessero riavviare le VM (vagrant halt) sarà necessario entrare in un worker qualunque ed eseguire il comando "sudo chmod 666 /var/run/docker.sock"
+
+    
