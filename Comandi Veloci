@@ -1,0 +1,20 @@
+##Download di "https://github.com/GioeleLaugelli/Infra/archive/refs/heads/main.zip" ed estrarre in un path a piacere
+##Aprire una sessione PS e andare nella folder estratta precedentemente
+##Creazione Macchine
+vagrant up
+##Connessione e settaggio Master
+vagrant ssh kmaster -c "sudo yum install wget -y; wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/master.sh; chmod +x master.sh; ./master.sh | grep task;"
+$tokenK8="sudo "+$(vagrant ssh kmaster -c 'kubeadm token create --print-join-command')
+##Connessione e settaggio Worker
+vagrant ssh kworker1 -c "sudo yum install wget -y;wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/worker.sh; chmod +x worker.sh; ./worker.sh | grep task ; $tokenK8" 
+vagrant ssh kworker2 -c "sudo yum install wget -y;wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/worker.sh; chmod +x worker.sh; ./worker.sh | grep task ; $tokenK8"
+##Gestione app web-server
+vagrant ssh kmaster -c "kubectl apply -f https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/kube-flannel.yml; cat ~/.kube/config"
+##Creazione Argo
+vagrant ssh kmaster -c "kubectl create namespace argocd; kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml; kubectl apply -n argocd -f https://raw.githubusercontent.com/GioeleLaugelli/Application/main/application.yaml"
+##Creazione Jenkins
+vagrant ssh kmaster -c "sudo yum install -y git; git clone https://github.com/GioeleLaugelli/Jenkins-K8.git; cd Jenkins-K8 ; chmod +x exec.sh; ./exec.sh"
+$nomePod=$(vagrant ssh kmaster -c "kubectl get pods -n jenkins --no-headers -o custom-columns=':metadata.name'")
+##Recupero password iniziale jenkins
+vagrant ssh kmaster -c "kubectl exec $nomePod -n jenkins -it -- sh "
+cat /var/jenkins_home/secrets/initialAdminPassword
