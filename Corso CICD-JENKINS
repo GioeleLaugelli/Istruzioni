@@ -56,7 +56,7 @@ Download Ngrok      : https://ngrok.com/download
             1) << sotto nodo master >>
                 1.1) vagrant@kmaster$ sudo yum install -y git                                                                                               --> installo git
                 1.2) vagrant@kmaster$ git clone https://github.com/GioeleLaugelli/Jenkins-K8.git                                                            --> clono repo
-                1.3) vagrant@kmaster$ cd jenkins-on-kube                                                                                                    --> entro nella cartella
+                1.3) vagrant@kmaster$ cd Jenkins-K8                                                                                                         --> entro nella cartella
                 1.4) vagrant@kmaster$ chmod +x exec.sh                                                                                                      --> permessi esecuzione a file
                 1.5) vagrant@kmaster$ ./exec.sh                                                                                                             --> crea componenti per jenkins
 
@@ -68,19 +68,19 @@ Download Ngrok      : https://ngrok.com/download
                             172.16.16.102:32000
     Questo perchè il servizio creato specifica NodePort come type
 
-    1) Al primo accesso Jenkins richiede la password iniziale è possibile trovarla nel file /var/lib/jenkins/secrets/initialAdminPassword contenuto nella pod
+    1) Al primo accesso Jenkins richiede la password iniziale è possibile trovarla nel file /var/jenkins_home/secrets/initialAdminPassword contenuto nella pod
         Per leggere il contenuto del file eseguire sul nodo master:
-            kubectl get pods -n jenkins 															        --> prendo il nome del pod
-            cat /home/vagrant/jenkins-on-kube/namespace.yaml												--> prendo il nome dello space
+            kubectl get pods -n jenkins --no-headers -o custom-columns=":metadata.name" 	--> prendo il nome del pod
+            cat /home/vagrant/Jenkins-K8/namespace.yaml						--> prendo il nome dello space
             kubectl exec <JENKINS_POD_NAME> -n <JENKINS_NAMESPACE> -it -- sh
-                cat /var/lib/jenkins/secrets/initialAdminPassword
+                cat /var/jenkins_home/secrets/initialAdminPassword
     2) Installare i componenti aggiuntivi consigliati
     3) Creare account
     4) Setup Pipeline
         4.1) Creazione credenziali:
-            ID          - USER              - TOKEN    
-            dockerhub   - GioeleLaugelli    - dckr_pat_AM1XOPRJh-whLCL1GQVCYmes1LA
-            github	    - dockerhublab      - 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
+            ID          - USER            - TOKEN    
+            dockerhub   - dockerhublab    - dckr_pat_y5lGP6s1gsMEbkv6O85U-ScQvSE
+            github	- GioeleLaugelli  - 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
         4.2) Creazione della Pipeline
             Cliccare su New Item, inserire un nome e selezionare la tipologia pipeline dall'elenco
             Attivare Tick "GitHub project"
@@ -116,8 +116,5 @@ Download Ngrok      : https://ngrok.com/download
     Andare sul repo di GitLab repo di https://github.com/GioeleLaugelli/Application-Code.git nella sezione Settings-Webhooks
     Aprire l'eseguibile scaricato prima ed eseguire il seguente comando: ngrok http 172.16.16.100:32000
     Inserire il risultato (Es:https://1cec-109-116-144-203.eu.ngrok.io) all'interno del webhook aggiungendo "/github-webhook/" alla fine (Es:https://1cec-109-116-144-203.eu.ngrok.io/github-webhook/)
-    
-7) Osservazioni:
-    Se si dovessero riavviare le VM (vagrant halt) sarà necessario entrare in un worker qualunque ed eseguire il comando "sudo chmod 666 /var/run/docker.sock"
-
+ 
     
