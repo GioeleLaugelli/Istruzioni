@@ -98,7 +98,7 @@ Download Vagrant    : https://www.vagrantup.com/downloads
             Script Path:
                 Jenkinsfile.linux
 
-5) Accedere ArgoCD
+6) Accedere ArgoCD
     Per accedere all'interfaccia grafica di ArgoCD è necessario rendere raggiungibile il servizio argocd-server
     Se si sta utilizzando Lens:
         Andare nella tab Network-Services
@@ -112,7 +112,7 @@ Download Vagrant    : https://www.vagrantup.com/downloads
         username: admin
         password: andare nella tab Config-Secrets argocd-initial-admin-secret locato nel namespace argocd, la password è codificata in base64(cliccare sull'occhio per ottenere la password adatta al login) 
 
-6) Abilitare jenkins su esterno 
+7) Abilitare jenkins su esterno 
     Scaricare ngrok (https://ngrok.com/download) ed estrarlo.
     Andare sul repo di GitLab repo di https://github.com/GioeleLaugelli/Application-Code.git nella sezione Settings-Webhooks
     Aprire l'eseguibile scaricato prima ed eseguire il seguente comando: ngrok http 172.16.16.100:32000
