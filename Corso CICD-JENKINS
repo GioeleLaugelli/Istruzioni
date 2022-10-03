@@ -11,7 +11,7 @@ Download Ngrok      : https://ngrok.com/download
 	    https://github.com/GioeleLaugelli/Infra.git
 	    https://github.com/GioeleLaugelli/Infra-Config.git
 
-    1)  Download di git in una folder ed entro in 1master2worker
+    1)  Download di "https://github.com/GioeleLaugelli/Infra.git" in una folder ed entrare nella folder tramite powershell
         1.1)  vagrant up                                                                                                                    --> crea macchine virtuali e le configura
     
     2)  vagrant ssh kmaster                                                                                                                 --> mi connetto alla vm
