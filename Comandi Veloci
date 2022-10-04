@@ -3,18 +3,37 @@
 ##Creazione Macchine
 vagrant up
 ##Connessione e settaggio Master
-vagrant ssh kmaster -c "sudo yum install wget -y; sleep 1; wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/master.sh; sleep 1; chmod +x master.sh; sleep 1; ./master.sh | grep task;"
+vagrant ssh kmaster -c "sudo yum install wget -y"
+vagrant ssh kmaster -c " wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/master.sh"
+vagrant ssh kmaster -c "chmod +x master.sh" 
+vagrant ssh kmaster -c "./master.sh | grep task"
 $tokenK8="sudo "+$(vagrant ssh kmaster -c 'kubeadm token create --print-join-command')
 ##Connessione e settaggio Worker
-vagrant ssh kworker1 -c "sudo yum install wget -y; sleep 1; wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/worker.sh; sleep 1; chmod +x worker.sh; sleep 1; ./worker.sh | grep task ; sleep 1; $tokenK8" 
-vagrant ssh kworker2 -c "sudo yum install wget -y; sleep 1; wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/worker.sh; sleep 1; chmod +x worker.sh; sleep 1; ./worker.sh | grep task ; sleep 1; $tokenK8"
+vagrant ssh kworker1 -c "sudo yum install wget -y" 
+vagrant ssh kworker1 -c "wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/worker.sh"
+vagrant ssh kworker1 -c "chmod +x worker.sh"
+vagrant ssh kworker1 -c "./worker.sh | grep task"
+vagrant ssh kworker1 -c "$tokenK8"
+vagrant ssh kworker2 -c "sudo yum install wget -y" 
+vagrant ssh kworker2 -c "wget https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/worker.sh"
+vagrant ssh kworker2 -c "chmod +x worker.sh"
+vagrant ssh kworker2 -c "./worker.sh | grep task"
+vagrant ssh kworker2 -c "$tokenK8"
 ##Gestione app web-server
-vagrant ssh kmaster -c "kubectl apply -f https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/kube-flannel.yml; sleep 1; cat ~/.kube/config"
+vagrant ssh kmaster -c "kubectl apply -f https://raw.githubusercontent.com/GioeleLaugelli/Infra-Config/main/kube-flannel.yml"
+vagrant ssh kmaster -c "cat ~/.kube/config"
 ##Creazione Argo
-vagrant ssh kmaster -c "kubectl create namespace argocd; sleep 1; kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml; sleep 1; kubectl apply -n argocd -f https://raw.githubusercontent.com/GioeleLaugelli/Application/main/application.yaml"
+vagrant ssh kmaster -c "kubectl create namespace argocd"
+vagrant ssh kmaster -c "kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
+vagrant ssh kmaster -c "kubectl apply -n argocd -f https://raw.githubusercontent.com/GioeleLaugelli/Application/main/application.yaml"
 ##Creazione Jenkins
-vagrant ssh kmaster -c "sudo yum install -y git; sleep 1; git clone https://github.com/GioeleLaugelli/Jenkins-K8.git; sleep 1; cd Jenkins-K8 ; sleep 1; chmod +x exec.sh; sleep 1; ./exec.sh"
+vagrant ssh kmaster -c "sudo yum install -y git"
+vagrant ssh kmaster -c "git clone https://github.com/GioeleLaugelli/Jenkins-K8.git"
+vagrant ssh kmaster -c "cd Jenkins-K8 ; chmod +x exec.sh"
+vagrant ssh kmaster -c "cd Jenkins-K8 ; ./exec.sh"
 $nomePod=$(vagrant ssh kmaster -c "kubectl get pods -n jenkins --no-headers -o custom-columns=':metadata.name'")
+$nomePod
 ##Recupero password iniziale jenkins
-vagrant ssh kmaster -c "kubectl exec $nomePod -n jenkins -it -- sh "
+vagrant ssh kmaster 
+kubectl exec <<<nomePod>>> -n jenkins -it -- sh
 cat /var/jenkins_home/secrets/initialAdminPassword
