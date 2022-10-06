@@ -119,4 +119,5 @@ Download VirtualBox : https://www.virtualbox.org/wiki/Downloads
     Aprire l'eseguibile scaricato prima ed eseguire il seguente comando: ngrok http 172.16.16.100:32000
     Inserire il risultato (Es:https://1cec-109-116-144-203.eu.ngrok.io) all'interno del webhook aggiungendo "/github-webhook/" alla fine (Es:https://1cec-109-116-144-203.eu.ngrok.io/github-webhook/)
  
-    
+8) Per visionare il cambiamento effettuato (dopo il success della pipeline)
+	Aprire lens -> Network -> Services -> application-argo ed abilitare la porta 5000:32001/TCP che porterà sulla pagina che contiene la nostra applicazione
