@@ -82,7 +82,7 @@ Download VirtualBox : https://www.virtualbox.org/wiki/Downloads
         4.1) Creazione credenziali:
             ID          - USER            - TOKEN    
             dockerhub   - dockerhublab    - dckr_pat_y5lGP6s1gsMEbkv6O85U-ScQvSE
-            github	- GioeleLaugelli  - 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
+            github	- GioeleLaugelli  - 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
         4.2) Creazione della Pipeline
             Cliccare su New Item, inserire un nome e selezionare la tipologia pipeline dall'elenco
             Attivare Tick "GitHub project"
